@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Information System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4">Student Information System</h1>
+
+        
+        <form id="studentForm" class="mb-4 bg-white p-4 rounded shadow">
+            <div class="mb-2">
+                <label for="studentId" class="block text-sm font-medium text-gray-700">Student ID</label>
+                <input type="text" id="studentId" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div class="mb-2">
+                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                <input type="text" id="name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div class="mb-2">
+                <label for="course" class="block text-sm font-medium text-gray-700">Course</label>
+                <input type="text" id="course" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div class="mb-2">
+                <label for="enrollmentDate" class="block text-sm font-medium text-gray-700">Enrollment Date</label>
+                <input type="date" id="enrollmentDate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div class="mb-2">
+                <label for="grade" class="block text-sm font-medium text-gray-700">Grade</label>
+                <input type="text" id="grade" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div class="flex space-x-2">
+                <button type="button" id="addStudent" class="px-4 py-2 bg-blue-500 text-white rounded-md">Add Student</button>
+                <button type="button" id="updateStudent" class="px-4 py-2 bg-green-500 text-white rounded-md">Update Student</button>
+            </div>
+        </form>
+
+        
+        <div class="mb-4">
+            <h2 class="text-xl font-bold mb-2">All Students</h2>
+            <ul id="studentList" class="bg-white p-4 rounded shadow"></ul>
+        </div>
+
+        
+        <div class="mb-4">
+            <h2 class="text-xl font-bold mb-2">Students by Grade</h2>
+            <input type="text" id="gradeFilter" class="mb-2 border-gray-300 rounded-md shadow-sm" placeholder="Enter grade to filter">
+            <button type="button" id="filterStudents" class="px-4 py-2 bg-yellow-500 text-white rounded-md">Filter</button>
+            <ul id="filteredStudentList" class="bg-white p-4 rounded shadow mt-2"></ul>
+        </div>
+    </div>
+
+<script>
+
+
+
+        const studentList = document.getElementById('studentList');
+        const filteredStudentList = document.getElementById('filteredStudentList');
+        const gradeFilter = document.getElementById('gradeFilter');
+
+        // Fetch all students
+        async function fetchStudents() {
+            try {
+                const response = await fetch('/students');
+                const students = await response.json();
+                studentList.innerHTML = '';
+                students.forEach(student => {
+                    const li = document.createElement('li');
+                    li.textContent = `${student.name} (${student.studentId}) - ${student.course} - ${new Date(student.enrollmentDate).toLocaleDateString()} - ${student.grade}`;
+                    studentList.appendChild(li);
+                });
+            } catch (err) {
+                console.error("Error fetching students:", err);
+            }
+        }
+
+        // Add new student
+        document.getElementById('addStudent').addEventListener('click', async () => {
+            const student = {
+                studentId: document.getElementById('studentId').value,
+                name: document.getElementById('name').value,
+                course: document.getElementById('course').value,
+                enrollmentDate: document.getElementById('enrollmentDate').value,
+                grade: document.getElementById('grade').value,
+            };
+            try {
+                await fetch('/students', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(student),
+                });
+                fetchStudents();
+            } catch (err) {
+                console.error("Error adding student:", err);
+            }
+        });
+
+        // Update student
+        document.getElementById('updateStudent').addEventListener('click', async () => {
+            const studentId = document.getElementById('studentId').value;
+            const student = {
+                name: document.getElementById('name').value,
+                course: document.getElementById('course').value,
+                enrollmentDate: document.getElementById('enrollmentDate').value,
+                grade: document.getElementById('grade').value,
+            };
+            try {
+                await fetch(`/students/${studentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(student),
+                });
+                fetchStudents();
+            } catch (err) {
+                console.error("Error updating student:", err);
+            }
+        });
+
+        // Filter students by grade
+        document.getElementById('filterStudents').addEventListener('click', async () => {
+            const grade = gradeFilter.value;
+            try {
+                const response = await fetch(`/students/grade/${grade}`);
+                const students = await response.json();
+                filteredStudentList.innerHTML = '';
+                students.forEach(student => {
+                    const li = document.createElement('li');
+                    li.textContent = `${student.name} (${student.studentId}) - ${student.course} - ${new Date(student.enrollmentDate).toLocaleDateString()} - ${student.grade}`;
+                    filteredStudentList.appendChild(li);
+                });
+            } catch (err) {
+                console.error("Error filtering students:", err);
+            }
+        });
+
+        // Initial fetch of all students
+        fetchStudents();
+    
+</script>
+
+</body>
+</html>
